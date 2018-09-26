@@ -486,7 +486,7 @@ Outputs given *database/sql.DB:
 
 @<code>{applicationSet}から@<code>{[]health.Checker}を生成したい場合は@<code>{*sql.DB}が必要でした。Injectorは@<list>{setup_checker}のような宣言になります。
 
-//listnum[setup_checker][[\]health.Checkerを取得するためのInjector]{
+//list[setup_checker][[\]health.Checkerを取得するためのInjector]{
 func setupChecker(db *sql.DB) ([]health.Checker, func()) {
     // This will be filled in by Wire with providers from the provider sets in
     // wire.Build.
@@ -512,7 +512,7 @@ wire: generate failed
 
 このInjector定義からwire_gen.goには@<list>{build_gen_setup_checker}のようなコードが生成されます。
 
-//listnum[build_gen_setup_checker][wire genコマンドで生成されたInjector]{
+//list[build_gen_setup_checker][wire genコマンドで生成されたInjector]{
 func setupChecker(db *sql.DB) ([]health.Checker, func()) {
     v, cleanup := appHealthChecks(db)
     return v, func() {
@@ -527,7 +527,7 @@ func setupChecker(db *sql.DB) ([]health.Checker, func()) {
 注入するオブジェクトがBLOBクライアント、 SQLクライアント(と、ロガーなどの設定)のみでもかなりのコード量が自動生成されることを考えると
 必要なコンポーネントさえInjectorに並べる@<fn>{fn_last}だけでコーディングが済むのはかなり魅力的です。
 
-//listnum[setup_gcp_gen][GCPに依存した*applicationオブジェクトを取得するInjector]{
+//list[setup_gcp_gen][GCPに依存した*applicationオブジェクトを取得するInjector]{
 func setupGCP(ctx context.Context,
               flags *cliFlags) (*application, func(), error) {
   stackdriverLogger := sdserver.NewRequestLogger()
