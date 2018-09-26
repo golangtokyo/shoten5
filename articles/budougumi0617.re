@@ -23,7 +23,7 @@ go-cloudは現時点でAlphaリリース(v0.2.0)であるため、今後本稿�
 
 == go-cloudの概要
 go-cloudはGoogleが公開したポータブルなクラウドアプリケーションを開発するためのGo用のAPIライブラリです。
-2018/07/24にGo blogに"Portable Cloud Programming with Go Cloud"@<fn>{goblog}というタイトルでリリースアナウンスが公開されました。
+2018/07/24にGo blogで"Portable Cloud Programming with Go Cloud"@<fn>{goblog}というタイトルでリリースアナウンスされました。
 
 //footnote[goblog][@<href>{https://blog.golang.org/go-cloud}]
 
@@ -74,7 +74,7 @@ w.Write(data)
 w.Close()
 //}
 
-go-cloud/blobパッケージに含まれる@<code>{blob.Bucket}のAPI定義に基づいてファイルアップロードのロジックが書かれています。
+@<code>{go-cloud/blob}パッケージに含まれる@<code>{blob.Bucket}のAPI定義に基づいてファイルアップロードのロジックが書かれています。
 @<code>{setupBucket()}メソッド内で@<code>{go-cloud/blob/s3blob}と@<code>{go-cloud/blob/gcsblob}のどちらかを生成する処理がありますが、
 main.goの実装にクラウドプロパイダーに依存した処理はありません。
 @<code>{blob.Bucket}オブジェクトの初期化処理を隠蔽すれば、コーディングを行う開発者はクラウドプロパイダーのSDKを考慮せずに開発することができます。
@@ -87,18 +87,18 @@ go-cloudリポジトリには大きく分けて@<table>{repo_content}の内容�
 分類	内容
 -------------------------------------------------------------
 メインコード	ジェネリックなAPI定義とAWS/GCPに対応した実装
-wireパッケージ	Wireコマンドを利用したDIの仕組み
-samplesパッケージ	サンプルコード
+@<code>{wire}パッケージ	Wireコマンドを利用したDIの仕組み
+@<code>{samples}パッケージ	サンプルコード
 //}
 
 go-cloudのリポジトリには大まかにジェネリックなAPI定義が含まれています。
-また、それぞれの実装は@<hd>{wire_section}から説明するgo-cloud/wireパッケージとWireコマンドを利用したDIを行うための設計がされています。
+また、それぞれの実装は@<hd>{wire_section}から説明する@<code>{go-cloud/wire}パッケージとWireコマンドを利用したDIを行うための設計がされています。
 サンプルは3種類あり、それぞれの概要は@<table>{samples_content}のとおりです。
 
 //table[samples_content][go-cloud/samplesに用意されているコンテンツ内容]{
 サンプル名	内容
 -------------------------------------------------------------
-tutorial	go-cloud/blobパッケージを使ったCLIツール
+tutorial	@<code>{go-cloud/blob}パッケージを使ったCLIツール
 wire	Wireコマンドを使ったDIのサンプル
 guestbook	AWS/GCP上で実行できるWireを駆使したWebサーバのサンプル
 //}
@@ -110,8 +110,8 @@ guestbook	AWS/GCP上で実行できるWireを駆使したWebサーバのサン�
 
 
 == go-cloud/blobパッケージ
-go-cloud/blobパッケージはジェネリックなAPIとして@<code>{blob.Bucket}を提供しています。
-go-cloud/blobパッケージのサブパッケージにある@<code>{OpenBucket}関数を用いると、各クラウドプロパイダー用の設定がされた@<code>{blob.Bucket}オブジェクトを生成することが出来ます。
+@<code>{go-cloud/blob}パッケージはジェネリックなAPIとして@<code>{blob.Bucket}を提供しています。
+@<code>{go-cloud/blob}パッケージのサブパッケージにある@<code>{OpenBucket}関数を用いると、各クラウドプロパイダー用の設定がされた@<code>{blob.Bucket}オブジェクトを生成することが出来ます。
 
 //list[s3blob_open_bucket][go-cloud/blob/s3blob/s3blob.go]{
 func OpenBucket(ctx context.Context,
@@ -154,8 +154,8 @@ func Open(ctx context.Context, provider CertPoolProvider, params *Params) (*sql.
 
 =={wire_section} Wireの概要
 Wireコマンドはgo-cloudリポジトリに付属されているコマンドラインツールです。
-Wireコマンドはgo-cloud/wireパッケージをつかって定義されたDependency Injection(DI、依存性の注入)を解決するコードを自動生成します。
-go-cloud配下のパッケージはWireパッケージを使って依存関係を定義しています。
+Wireコマンドは@<code>{go-cloud/wire}パッケージをつかって定義されたDependency Injection(DI、依存性の注入)を解決するコードを自動生成します。
+go-cloud配下のパッケージは@<code>{go-cloud/wire}パッケージを使って依存関係を定義しています。
 
 Wireを使った実装を行うと、私たちは以下の恩恵を受けることができます。
 
@@ -175,10 +175,10 @@ Wireは実行時の状態やリフレクションなしで動作するため、W
 https://github.com/google/go-cloud/tree/master/wire
 
 後述するProviderとInjectorを利用した実装を行なうことで、依存関係を解決するコードをWireコマンドで自動生成することが可能になります。
-ちなみにgo-cloud/wireパッケージ・Wireコマンドはgo-cloudの他パッケージと独立しているので、WireによるDIの仕組みをまったく別のパッケージで活用することも可能です。
+ちなみに@<code>{go-cloud/wire}パッケージ・Wireコマンドはgo-cloudの他パッケージと独立しているので、WireによるDIの仕組みをまったく別のパッケージで活用することも可能です。
 
 ==={pro_and_inj} ProviderとInjector
-go-cloud/wireパッケージが提供するDIの仕組みには@<b>{Provider}と@<b>{Injector}という概念があります。
+@<code>{go-cloud/wire}パッケージが提供するDIの仕組みには@<b>{Provider}と@<b>{Injector}という概念があります。
 依存関係を定義するProviderと依存関係を注入するInjectorです。
 
 
@@ -293,7 +293,7 @@ wire showコマンドは引数に指定されたパッケージ内から以下�
  * Injectorの情報を出力する
 
 実際にgo-cloudリポジトリのsamples/guestbookでweire showコマンドを実行してみましょう。
-samples/guestbookパッケージには@<list>{application_set}のようなapplicationSetがProviderとして用意されています。
+@<code>{samples/guestbook}パッケージには@<list>{application_set}のようなapplicationSetがProviderとして用意されています。
 また、inject_{aws, gcp, local}.goファイルには複数のInjectorが宣言されています。
 
 //list[application_set][go-cloud/samples/guestbook/main.go]{
@@ -307,7 +307,7 @@ var applicationSet = wire.NewSet(
 //}
 
 これだけ見てもこのProviderでどんなことができるかわかりませんね。
-samples/guestbookパッケージに対してwire showコマンドを実行した結果が以下になります。
+@<code>{samples/guestbook}パッケージに対してwire showコマンドを実行した結果が以下になります。
 
 //cmd{
 $ pwd
@@ -348,7 +348,7 @@ Injectors:
 
 
 まず、@<list>{show_format}では表示されていませんが、wire showコマンドで表示するProviderが他のProviderに依存した定義になっている場合、依存しているProviderの一覧も表示されます。
-次のコマンドライン出力の結果はgo-cloud/gcp/gcpcloudパッケージに対してwire showコマンドを実行した結果です。
+次のコマンドライン出力の結果は@<code>{go-cloud/gcp/gcpcloud}パッケージに対してwire showコマンドを実行した結果です。
 GCPというProviderから得られるOutputを出力する前に、GCPが依存するProviderの一覧が表示されています。
 
 
@@ -472,7 +472,7 @@ wire.Build(wire.InterfaceValue(new(io.Reader), os.Stdin))
 //}
 
 では実際にInjectorを一つ実装してみます。
-@<hd>{how_to_wire}で確認したsamples/guestbookパッケージのapplicationSetの情報は@<list>{cmd_wire_show}です。
+@<hd>{how_to_wire}で確認した@<code>{samples/guestbook}パッケージのapplicationSetの情報は@<list>{cmd_wire_show}です。
 
 //list[cmd_wire_show][s]{
 $ wire show
@@ -553,7 +553,7 @@ func setupGCP(ctx context.Context,
 
 == おわりに
 今回はgo-cloudリポジトリと付属するWireコマンドの概要を確認しました。
-また、サンプルコードからwireパッケージを使ってDIを行う流れを解説しました。
+また、サンプルコードから@<code>{go-cloud/wire}パッケージを使ってDIを行う流れを解説しました。
 Wireコマンドはgo-cloudのパッケージに依存しないDIツールでそれ単独でも利用することができます。
 go-cloudを使わなずともGoでDIを行う時にWireを使うのはいかがでしょうか。
 
