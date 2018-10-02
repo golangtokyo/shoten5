@@ -1,14 +1,14 @@
 = go testのオプション大全
 Goではテストツールとして@<code>{go test}というコマンドが標準ツールとして提供されています。
-@<tt>{go test}はテスト以外にもベンチマークにも使うことができます。
 
 本章では@<code>{go test}で使うことのできるフラグの役割を解説し、テストにどのような影響を与えるか解説します。
+なお、対象にするGoのバージョンは2018年10月1日時点で最新の1.11とします。
 
 == go testのフラグ一覧
 @<tt>{go test}のヘルプを見るためには@<code>{go test -h}で見ることができます。
 ソースコードでゆっくり見たい場合にはGitHubにコード@<fn>{knsh14_link_gotestsourcecode}があるので最新のものを見ることができます。
 
-//footnote[knsh14_link_gotestsourcecode][@<href>{https://github.com/golang/go/blob/master/src/cmd/go/internal/test/test.go}]
+//footnote[knsh14_link_gotestsourcecode][@<href>{https://github.com/golang/go/blob/release-branch.go1.11/src/cmd/go/internal/test/test.go}]
 
 @<tt>{go test}のフラグにはいくつか種類があります。
 
@@ -18,10 +18,10 @@ Goではテストツールとして@<code>{go test}というコマンドが標�
 これらは@<tt>{go test -h}で見た場合には特に区別されていませんが、ソースコードを読んでみるとそれぞれ別の変数で定義されていることがわかります。@<fn>{knsh14_gotestFlag1}@<fn>{knsh14_gotestFlag2}
 本章では便宜上カテゴリ1、カテゴリ2という呼び方で両者を区別します。
 
-//footnote[knsh14_gotestFlag1][@<href>{https://github.com/golang/go/blob/master/src/cmd/go/internal/test/test.go#L136}]
-//footnote[knsh14_gotestFlag2][@<href>{https://github.com/golang/go/blob/master/src/cmd/go/internal/test/test.go#L197}]
+//footnote[knsh14_gotestFlag1][@<href>{https://github.com/golang/go/blob/release-branch.go1.11/src/cmd/go/internal/test/test.go#L136}]
+//footnote[knsh14_gotestFlag2][@<href>{https://github.com/golang/go/blob/release-branch.go1.11/src/cmd/go/internal/test/test.go#L197}]
 
-== カテゴリ1 go testの実行そのものに影響を与えるもの
+== カテゴリ1 go testそのものによって解釈されるもの
 この種類に分類されるフラグは以下のものがあります。
 
  * @<tt>{-args}
