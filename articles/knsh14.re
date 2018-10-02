@@ -118,11 +118,49 @@ ok      github.com/knsh14/sample        0.007s
 この際に、カテゴリ2の@<tt>{-v}オプションも同時に付与され、詳細なログが出力されます。
 JSONの出力形式についてより詳しく知りたい場合には@<code>{go doc test2json}からドキュメントを見ることができます。@<fn>{knsh14_link_doctotest2json}
 
-//footnote[knsh14_link_doctotest2json][@<href>{https://golang.org/cmd/test2json/}]
-
 詳細なログはいらないという場合には@<tt>{-exec}フラグを使って@<code>{go test -exec "go tool test2json"}とします。
+
+//footnote[knsh14_link_doctotest2json][@<href>{https://golang.org/cmd/test2json/}]
 
 === o
 テストバイナリを渡された名前で生成します。
 これだけ聞くと@<tt>{-c}と大きな差がないように見えます。
 しかし、このオプションだけをつけて実行した場合はテストが実行された上でバイナリが生成されます。
+
+== カテゴリ2  go testによって実行されるテストが影響をうけるもの
+このカテゴリに分類されるフラグは以下のものがあります。
+
+ * @<tt>{-bench regexp}
+ * @<tt>{-benchtime t}
+ * @<tt>{-count n}
+ * @<tt>{-cover}
+ * @<tt>{-covermode set,count,atomic}
+ * @<tt>{-coverpkg pattern1,pattern2,pattern3}
+ * @<tt>{-cpu 1,2,4}
+ * @<tt>{-failfast}
+ * @<tt>{-list regexp}
+ * @<tt>{-parallel n}
+ * @<tt>{-run regexp}
+ * @<tt>{-short}
+ * @<tt>{-timeout d}
+ * @<tt>{-v}
+ * @<tt>{-vet list}
+
+さらに、プロファイル用のフラグとして、以下のフラグが用意されています。
+
+ * @<tt>{-benchmem}
+ * @<tt>{-blockprofile block.out}
+ * @<tt>{-blockprofilerate n}
+ * @<tt>{-coverprofile cover.out}
+ * @<tt>{-cpuprofile cpu.out}
+ * @<tt>{-memprofile mem.out}
+ * @<tt>{-memprofilerate n}
+ * @<tt>{-mutexprofile mutex.out}
+ * @<tt>{-mutexprofilefraction n}
+ * @<tt>{-outputdir directory}
+ * @<tt>{-trace trace.out}
+
+=== -bench
+@<tt>{go test}でベンチマークを取るためのフラグです。
+ベンチマークを実行する関数を指定するためには続けて正規表現でパターンを指定します。
+
