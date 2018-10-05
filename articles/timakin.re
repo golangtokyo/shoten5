@@ -4,7 +4,8 @@
 
 株式会社Gunosyのバックエンド兼フロントエンドエンジニアの@timakin@<fn>{fn1}です。
 読者の皆様でも、もしかしたらご存知かもしれませんが、Goのバージョン1.11から、Modulesという依存パッケージ管理機構が導入されました。
-@<code>{mod}というコマンドを通じてパッケージの管理ができます。しかし、あくまで試験導入であり、正式に仕様が固まったという段階ではありません。
+@<code>{mod}というコマンドを通じてパッケージの管理ができます。もちろん、あくまで試験導入であり、正式に仕様が固まったという段階ではありません。
+
 しかし、それを差し引いても、@<code>{glide}や@<code>{dep}などの既存パッケージ管理ツールを主に利用してきた人なら、
 コマンドそのもののインストールや、@<code>{go get}だけでは解決しない依存関係という、
 多少気になっても明確な解決策がなかった問題を、Modulesを通じて解決することにメリットを感じることでしょう。
@@ -18,6 +19,7 @@
 
 Modulesについて書く前に、Modulesの意義を知るためにも、従来の依存パッケージはどのように行われていたのかを振り返る必要があります。
 これまで、Goのプロジェクトで外部のパッケージへの依存関係を固定するためのツールはいくつも登場していました。
+
 具体名を挙げるなら、非公式ではあるものの、有力な候補として活躍していたのは、@<code>{Godep}、@<code>{gb}、@<code>{glide}などでしょう。
 また、2016年以降はほぼ公式のパッケージ管理ツールとして、@<code>{dep}が使われていました。
 @<code>{dep}が登場して以降は、@<code>{Godep}や@<code>{glide}は開発こそ継続していたものの、@<code>{dep}リリース直後からREADMEで@<code>{dep}への移行を促す表明をしていました。
@@ -93,6 +95,7 @@ Modulesについて書く前に、Modulesの意義を知るためにも、従来
 例えば、v1であれば@<code>{/foo/bar}はそのままでいいですが、仮にメジャーアップデートが生じた場合、@<code>{/v1/foo/bar}と@<code>{/v2/foo/bar}を分けて開発する必要があります。
 Goのパッケージではなかなか大幅なメジャーアップデートを行うものは見かけませんが、例えばJavaScriptのライブラリのように、
 メジャーバージョンをいきなり大幅に上げるような振る舞いは、あまりよろしくないものとなります。
+
 特にメジャーバージョンを細かく刻んでアップデートするとさらに大変で、そのバージョンごとにパッケージを切って開発する必要が出てくるでしょう。
 このように、開発者は今までよりも明確にバージョンを意識しながら変更を加えていかなければなりません。
 
@@ -127,6 +130,7 @@ why         explain why packages or modules are needed
 
 この@<code>{mod}コマンド、試験導入なこともありまだ浸透していないかと思いきや、大きめのOSSプロジェクトでも利用していたりします。
 具体的にはOSSになったソースコード探索サービス、Sourcegraphの中で使われていたりします。@<fn>{fn3}
+
 こちらの事例は非常に参考になるとは思いますが、１から進めていったときにどのような作業が必要なのか知るためにも、
 自分自身でModulesの機構に則りながら、APIを書いてみました。当事例のパッケージ名をdratiniと呼称します。
 こちらは実際に私のGithubのプロジェクトとして開発しましたが、内容について詳しい言及はいたしません。
@@ -136,6 +140,7 @@ why         explain why packages or modules are needed
 まず前提として、Modulesは試験導入と再三書いた通り、GOPATH配下だとデフォルトで有効ではありません。
 @<code>{GO111MODULE=on}という環境変数を設定する必要があります。GOPATH配下ではない、全く関係のないディレクトリ配下だった場合は、このオプションはデフォルトでONになり、
 常に@<code>{build}や@<code>{test}の際に依存パッケージの存在確認を行って、なければ@<code>{GO111MODULE}オプションが有効になり、依存パッケージのインストールが行われます。
+
 このオプションが有効になった状態で、まずは依存パッケージのマニフェストファイルを初期化するために、@<code>{go mod init}を実行します。
 すると、@<code>{go.mod}ファイルが生成されると思います。中身はシンプルに、@<list>{list4}のような状態になっているかと思います。
 
@@ -146,6 +151,7 @@ module github.com/timakin/dratini
 開発を進めていき、このマニフェストの内容以外にも依存パッケージの設定を追加しなければならない場合は、@<code>{go mod tidy}を実行します。
 @<code>{dep}に慣れしたんでいた方は@<code>{dep ensure}を思い浮かべるとわかりやすいでしょう。
 @<code>{tidy}は依存パッケージの追記や、使っていない依存関係を削除する役割を担います。
+
 実行すると、@<code>{go.mod}ファイルへの依存パッケージ情報の追記と同時に、@<code>{go.sum}というファイルが新しく作成され、
 依存パッケージの細かいchecksum情報が記載され、再現性が取れる形でどの時点の該当パッケージをインストールすればいいか出力します。
 具体的には@<list>{list5}と@<list>{list6}のようなファイルになります。
@@ -173,21 +179,21 @@ require (
 //}
 
 //list[list6][go.sumの出力結果]{
-github.com/BurntSushi/toml v0.3.0 h1:e1/Ivsx3Z0FVTV0NSOv/aVgbUWyQuzj7DDnFblkRvsY=
-github.com/BurntSushi/toml v0.3.0/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/RobotsAndPencils/buford v0.12.0 h1:2nfOk+N/QVoQHwXIS0m5TFdvlUjEnqAj/0yXKR75azY=
-github.com/RobotsAndPencils/buford v0.12.0/go.mod h1:27KhJZ/wLQHRnsZF+mTWKvF5w8U4dVl4Nh+BfQem4Lo=
-github.com/client9/reopen v1.0.0 h1:8tpLVR74DLpLObrn2KvsyxJY++2iORGR17WLUdSzUws=
-github.com/client9/reopen v1.0.0/go.mod h1:caXVCEr+lUtoN1FlsRiOWdfQtdRHIYfcb0ai8qKWtkQ=
-github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
-github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/pkg/errors v0.8.0 h1:WdK/asTD0HN+q6hsWO3/vpuAkAr+tw6aNJNDFFf0+qw=
-github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
-github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
-github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=
-github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
-go.uber.org/atomic v1.3.2 h1:2Oa65PReHzfn29GpvgsYwloV9AVFHPDk8tYxt2c2tr4=
+github.com/BurntSushi/toml v0.3.0 h1:e1/Ivsx3Z0FVTV0NSOv/aVgbUWyQuzj7=
+github.com/BurntSushi/toml v0.3.0/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBk=
+github.com/RobotsAndPencils/buford v0.12.0 h1:2nfOk+N/QVoQHwXIS0m5TFdvlUjEnqAj=
+github.com/RobotsAndPencils/buford v0.12.0/go.mod h1:27KhJZ/wLQHRnsZF+mTWKvF5w8U=
+github.com/client9/reopen v1.0.0 h1:8tpLVR74DLpLObrn2KvsyxJY++2iORGR=
+github.com/client9/reopen v1.0.0/go.mod h1:caXVCEr+lUtoN1FlsRiOWdfQtdRHIYfc=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHY=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iL=
+github.com/pkg/errors v0.8.0 h1:WdK/asTD0HN+q6hsWO3/vpuAkAr+tw6a=
+github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDR=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEz=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZ=
+github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9Rt=
+github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7=
+go.uber.org/atomic v1.3.2 h1:2Oa65PReHzfn29GpvgsYwloV9AVFHPDk=
 //}
 
 === Dockerイメージの作成やCI環境について
