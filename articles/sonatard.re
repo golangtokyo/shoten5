@@ -120,7 +120,7 @@ func (c *Client) Do(req *Request) (*Response, error) {
 === @<href>{https://github.com/golang/go/blob/go1.11.1/src/net/http/client.go#L168-L198,func (c *Client) send(req *Request\, deadline time.Time) (resp *Response\, didTimeout func() bool\, err error)}
 
 
-Cookieの処理をして @<tt>{http.Sned} を実行します。
+Cookieの処理をして @<tt>{http.sned} を実行します。
 
 
 //emlist{
@@ -259,7 +259,7 @@ func (t *Transport) RoundTrip(req *Request) (*Response, error) {
 
 
 getConnではキャッシュされたTCPコネクションを取得するか、キャッシュがない場合には新たにTCPコネクションを確立します。
-新規にコネクションを作成する際にはdialを実行するが、既に確立されているコネクションが終了を先に検知すればそちらを使います。
+新規にコネクションを作成する際にはdialを実行しますが、既に確立されているコネクションの終了が先の場合にはそちらを使います。
 
 
 //emlist{
@@ -342,6 +342,10 @@ type persistConn struct {
 
 === @<href>{https://github.com/golang/go/blob/go1.11.1/src/net/http/transport.go#L1882-L1919,func (pc *persistConn) writeLoop()}
 
+
+@<tt>{writeLoop} は、ユーザ実行タスクから送信する @<tt>{http.Request} を Channel経由で受け取り送信処理を実行します。
+
+
 //emlist{
 func (pc *persistConn) writeLoop() {
     // 省略
@@ -355,7 +359,7 @@ func (pc *persistConn) writeLoop() {
 //}
 
 
-このとき第1引数に渡している @<tt>{pc.pw} は以下になります。
+このとき @<tt>{write} の 第1引数に渡している @<tt>{pc.pw} は以下になります。
 
 
 //emlist{
@@ -373,9 +377,7 @@ type persistConn struct {
 //emlist{
 func (t *Transport) dialConn(ctx context.Context, cm connectMethod) (*persistConn, error) {
     // 省略
-    pconn.br = bufio.NewReader(pconn)
     pconn.bw = bufio.NewWriter(persistConnWriter{pconn})
-    go pconn.readLoop()
     go pconn.writeLoop()
     return pconn, nil
 }
@@ -419,7 +421,7 @@ type persistConn struct {
 
 
 
-HTTP1はバイナリフォーマットではなくテキストフォーマットの珍しいプロトコルのため、文字列にして @<tt>{w} に対して書き込んでいきます。
+HTTP1はバイナリフォーマットではなくテキストフォーマットの珍しいプロトコルであるため、文字列にして @<tt>{w} に対して書き込んでいきます。
 ここにたどり着くまでに送るべきデータの構造体は完成しているので、それをHTTPのHeaderやBodyデータに変換していきます。
 
 
@@ -482,19 +484,254 @@ func (req *Request) write(w io.Writer, usingProxy bool, extraHeaders Header, wai
 }
 //}
 
-== おわりに
+=== HTTPパケット送信シーケンスまとめ
 
 
-本章では、普段からよく利用するHTTPリクエストの送信処理について紹介しました。
-とても簡単にHTTPリクエストを送ることができますが、これはGoが標準ライブラリでこれだけの処理を実装してくれているためです。
-
-
-
+Goではとても簡単にHTTPリクエストを送ることができますが、これはGoが標準ライブラリでこれだけの処理を実装してくれているためです。
 net.ConnへのWriteからシステムコールのsocketのsendの実装は？
 Responseはどのようにして受け取るのか?
 など、まだ疑問は残りますが続きはみなさんで調べてみてください。
 
 
+== 学び
 
+
+次に送信の一連の処理を読んでいて気が付いた学びを紹介します。
+
+
+=== Channelの実例
+
+
+Channelのサンプルでよく登場するタイマーによるリクエストのキャンセル処理が書かれています。
+
+
+//emlist{
+func setRequestCancel(req *Request, rt RoundTripper, deadline time.Time) (stopTimer func(), didTimeout func() bool) {
+    // 省略
+
+    stopTimerCh := make(chan struct{})
+    var once sync.Once
+    stopTimer = func() { once.Do(func() { close(stopTimerCh) }) }
+
+    timer := time.NewTimer(time.Until(deadline))
+    var timedOut atomicBool
+
+    go func() {
+        select {
+        case <-initialReqCancel:
+            doCancel()
+            timer.Stop()
+        case <-timer.C:
+            timedOut.setTrue()
+            doCancel()
+        case <-stopTimerCh:
+            timer.Stop()
+        }
+    }()
+
+    // 省略
+}
+//}
+
+=== utility package
+
+
+単純な文字列処理をするhttpgutsパッケージを利用しています。
+httpgutsは、内部ではなく外部の @<tt>{golang_org/x/net/http/httpguts} ライブラリに分割しています。utilパッケージのようなものは否定されることもありますが、標準ライブラリでも行われていることがわかります。
+
+
+
+このような汎用的な処理を、無理にドメインに配置するのではなく切り出すのは正しいということです。
+ただしこのときに様々な機能を1つのutilily パッケージのようなものを作ることは避けるべきでしょう。
+
+
+//emlist{
+func (t *Transport) RoundTrip(req *Request) (*Response, error) {
+    // 省略
+        for k, vv := range req.Header {
+            if !httpguts.ValidHeaderFieldName(k) {
+                return nil, fmt.Errorf("net/http: invalid header field name %q", k)
+            }
+            for _, v := range vv {
+                if !httpguts.ValidHeaderFieldValue(v) {
+                    return nil, fmt.Errorf("net/http: invalid header field value %q for key %v", v, k)
+                }
+            }
+        }
+    // 省略
+//}
+
+=== ループのリトライ処理
+
+
+いくつかでてきたがリトライ処理が必要なものは無限ループで、成功した場合にだけ抜けるという書き方をしています。
+
+
+//emlist{
+    for {
+        // 省略
+        resp, err = pconn.alt.RoundTrip(req)
+        if err == nil {
+        // 成功すればresponseを返すが、成功しなければforループにより再実行する
+            return resp, nil
+        }
+
+
+//}
+
+=== 1つの関数内でのみ実行される関数の定義場所
+
+
+handlePendingDialなどその関数でしか使わない共通処理は、関数内部でクロージャとして定義されています。
+
+
+//emlist{
+func (t *Transport) getConn(treq *transportRequest, cm connectMethod) (*persistConn, error) {
+        handlePendingDial := func() {
+        testHookPrePendingDial()
+        go func() {
+            if v := <-dialc; v.err == nil {
+                t.putOrCloseIdleConn(v.pc)
+            } else {
+                t.decHostConnCount(cmKey)
+            }
+            testHookPostPendingDial()
+        }()
+    }
+
+    // 省略
+        case pc := <-idleConnCh:
+        handlePendingDial()
+        if trace != nil && trace.GotConn != nil {
+            trace.GotConn(httptrace.GotConnInfo{Conn: pc.conn, Reused: pc.isReused()})
+        }
+        return pc, nil
+    case <-req.Cancel:
+        handlePendingDial()
+        return nil, errRequestCanceledConn
+    case <-req.Context().Done():
+        handlePendingDial()
+        return nil, req.Context().Err()
+    case err := <-cancelc:
+        handlePendingDial()
+        if err == errRequestCanceled {
+            err = errRequestCanceledConn
+        }
+}
+//}
+
+=== 1度だけコピー
+
+
+1度だけコピーしたいというテクニックの紹介です。
+
+
+//emlist{
+func send(ireq *Request, rt RoundTripper, deadline time.Time) (resp *Response, didTimeout func() bool, err error)
+    // 初期状態のireqを保存
+    req := ireq // req is either the original request, or a modified fork
+    //省略
+
+    // 1度だけコピーする処理
+    forkReq := func() {
+        // もし初期状態と変わっていなければ新しいRequestを作成してコピー
+        if ireq == req {
+            req = new(Request)
+            *req = *ireq // shallow clone
+        }
+    }
+
+    if req.Header == nil {
+        // reqを書き換える前にコピー
+        forkReq()
+        req.Header = make(Header)
+    }
+    // 省略
+}
+//}
+
+=== Hook関数を用意したテスト
+
+
+テスト用にHook関数が実行挿入している。普段はnopなので、何もしませんがテストのときだけ挿入するようになっています。
+
+
+//emlist{
+func nop() {}
+
+// testHooks. Always non-nil.
+var (
+    testHookEnterRoundTrip   = nop
+)
+
+func (pc *persistConn) roundTrip(req *transportRequest) (resp *Response, err error) {
+    testHookEnterRoundTrip()
+    if !pc.t.replaceReqCanceler(req.Request, pc.cancelRequest) {
+        pc.t.putOrCloseIdleConn(pc)
+        return nil, errRequestCanceled
+    }
+    pc.mu.Lock()
+    pc.numExpectedResponses++
+    headerFn := pc.mutateHeaderFunc
+    pc.mu.Unlock()
+
+    if headerFn != nil {
+        headerFn(req.extraHeaders())
+    }
+//}
+
+
+以下では、RoundTrip実行時にCnacelのRequestを送って正しくエラーが返ってくることを確認するテストしています。
+
+
+//emlist{
+    SetEnterRoundTripHook(func() {
+        tr.CancelRequest(req)
+    })
+    defer SetEnterRoundTripHook(nil)
+    res, err := tr.RoundTrip(req)
+    if err != ExportErrRequestCanceled {
+        t.Errorf("expected canceled request error; got %v", err)
+        if err == nil {
+            res.Body.Close()
+        }
+    }
+//}
+
+=== デバッグ用コードやテスト用コードはベタがき
+
+
+素直にベタがきをしています。
+さらに変数定義が関数内にあり、デバッグ時にtrueにして使うのだと思います。
+
+
+
+正しさよりもシンプルな実装を心がけることについて、勇気を与えてくれるコードです。
+
+
+//emlist{
+func (pc *persistConn) roundTrip(req *transportRequest) (resp *Response, err error) {
+
+    // 省略
+    const debugRoundTrip = false
+
+    // 省略
+    if debugRoundTrip {
+            req.logf("writeErrCh resv: %T/%#v", err, err)
+    }
+}
+//}
+
+== おわりに
+
+
+本章では、普段からよく利用するHTTPリクエストの送信処理の紹介とそこからの学びを紹介しました。
 中々この知識を業務で活かす機会は少ないかもしれませんが、何かのお役に立てば幸いです。
+
+
+
+また学びについては、Goではシンプルに書くことが正しいとされていますが、
+開発していると手の込んだ抽象化した設計を選定したくなりがちです。
+しかし抽象化のコードは本質的なロジックの見通しが悪くなることがあります。
+設計をする際には @<tt>{if debugRoundTrip {} の愚直さをを思い出して、バランスを取った実装をしていきたいものです。
 
