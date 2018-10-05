@@ -1,20 +1,20 @@
 ={budougumi0617_title} go-cloudとWireコマンドの概要と活用方法
 
 == はじめに
-freee株式会社@<fn>{freee}でバックエンドエンジニアをしておりますbudougumi0617@<fn>{budougumi0617_fn1}です。
+freee株式会社@<fn>{budougumi0617_freee}でバックエンドエンジニアをしておりますbudougumi0617@<fn>{budougumi0617_fn1}です。
 普段は主にGoとgRPCによるマイクロサービスを開発しています。
 
-//footnote[freee][@<href>{https://corp.freee.co.jp}]
+//footnote[budougumi0617_freee][@<href>{https://corp.freee.co.jp}]
 //footnote[budougumi0617_fn1][@<href>{https://twitter.com/budougumi0617}]
 
-本章では7月に発表されたgo-cloud@<fn>{github_gocloud}とそれに付属するWireコマンドについて次の情報をまとめています。
+本章では7月に発表されたgo-cloud@<fn>{budougumi0617_github_gocloud}とそれに付属するWireコマンドについて次の情報をまとめています。
 
  * go-cloudの基本的な概要
  * Wireの基本的な概要
  * Wireを使ったDependency Inejection（依存性注入）の利用方法
  * Wireを使ったDependency Inejection（依存性注入）の提供方法
 
-//footnote[github_gocloud][@<href>{https://github.com/google/go-cloud}]
+//footnote[budougumi0617_github_gocloud][@<href>{https://github.com/google/go-cloud}]
 
 === 注意
 本稿は2018/09/23時点のgo-cloudリポジトリを参考に記述されています。
@@ -23,30 +23,30 @@ go-cloudは現時点でAlphaリリース(v0.2.0)であるため、今後本稿�
 
 == go-cloudの概要
 go-cloudはGoogleが公開したポータブルなクラウドアプリケーションを開発するためのGo用のAPIライブラリです。
-2018/07/24にGo blogで"Portable Cloud Programming with Go Cloud"@<fn>{goblog}というタイトルでリリースアナウンスされました。
+2018/07/24にGo blogで"Portable Cloud Programming with Go Cloud"@<fn>{budougumi0617_goblog}というタイトルでリリースアナウンスされました。
 
-//footnote[goblog][@<href>{https://blog.golang.org/go-cloud}]
+//footnote[budougumi0617_goblog][@<href>{https://blog.golang.org/go-cloud}]
 
 2018/09/23時点でGitHubに公開されているgo-cloudのリポジトリには次の内容が含まれています。
 
  * BLOBストレージのジェネリックなAPI定義
- * GCP, AWSのBLOBストレージサービス、MySQLサービスをラップした実装
+ * GCP、AWSのBLOBストレージサービス、MySQLサービスをラップした実装
  * ロギングやヘルスチェックなどの基本的なWebサーバの構成に必要な実装
- * Dependency Injection@<fn>{dependency_injection}を行なうためのWireコマンド
+ * Dependency Injection@<fn>{budougumi0617_dependency_injection}を行なうためのWireコマンド
 
-//footnote[dependency_injection][@<href>{https://en.wikipedia.org/wiki/Dependency_injection}]
+//footnote[budougumi0617_dependency_injection][@<href>{https://en.wikipedia.org/wiki/Dependency_injection}]
 
 ジェネリックなAPI定義とは、誤解を恐れずにいうとMySQL, postgreSQLなどに対する@<code>{database/sql}パッケージに相当するようなものです。
 また、より簡単にクラウドサービスへの依存関係をコードで表現できるように、Wireコマンドを使ったDependency Injection(DI、依存性の注入)の仕組みが提供されています。
 
 === go-cloudの対応クラウドプロバイダー
 各クラウドプロパイダー用の実装は2018/09/23時点でGoogle Cloud Platform(GCP)、Amazon Web Services(AWS)のみです。
-クラウドプロパイダーではありませんが、ローカル環境へのアクセスを想定した実装@<fn>{local_impl}は同梱されています。
+クラウドプロパイダーではありませんが、ローカル環境へのアクセスを想定した実装@<fn>{budougumi0617_local_impl}は同梱されています。
 GCP、AWS別ベンダーのサポート計画などはとくに公表されていません。
-Azureのサポートについてのissue@<fn>{azure_issue}などは立ち上がっています。
+Azureのサポートについてのissue@<fn>{budougumi0617_azure_issue}などは立ち上がっています。
 
-//footnote[local_impl][@<href>{https://github.com/google/go-cloud/tree/master/samples/guestbook/localdb}]
-//footnote[azure_issue][@<href>{https://github.com/google/go-cloud/issues/76}]
+//footnote[budougumi0617_local_impl][@<href>{https://github.com/google/go-cloud/tree/master/samples/guestbook/localdb}]
+//footnote[budougumi0617_azure_issue][@<href>{https://github.com/google/go-cloud/issues/76}]
 
 == go-cloudがなぜ必要なのか？
 クラウドプロパイダーを利用したWebアプリケーション開発が一般的になった今日ですが、kubernetes(k8s)やDockerを利用したコンテナ技術も身近になってきました。
@@ -104,9 +104,9 @@ guestbook	AWS/GCP上で実行できるWireを駆使したWebサーバのサン�
 //}
 
 ではgo-cloudで定義されたジェネリックなAPIを確認していきましょう。
-といっても、2018/09/23現在、go-cloudで定義されたクラウドサービスのジェネリックなAPI定義はBLOBストレージ用しかありません@<fn>{wrong_sql}。
+といっても、2018/09/23現在、go-cloudで定義されたクラウドサービスのジェネリックなAPI定義はBLOBストレージ用しかありません@<fn>{budougumi0617_wrong_sql}。
 
-//footnote[wrong_sql][AWSのRDS, GCP Cloud SQLのラッパーもありますが、go-cloud独自のAPIではなく@<code>{database/sql.DB}オブジェクトを生成するビルド関数です。]
+//footnote[budougumi0617_wrong_sql][AWSのRDS, GCP Cloud SQLのラッパーもありますが、go-cloud独自のAPIではなく@<code>{database/sql.DB}オブジェクトを生成するビルド関数です。]
 
 
 == go-cloud/blobパッケージ
@@ -145,9 +145,9 @@ func Open(ctx context.Context, provider CertPoolProvider, params *Params) (*sql.
 
 == go-cloudの何がよいのか？
 と、ここまでgo-cloudの概要をざっくり紹介してきましたが、「別に外部サービスに依存している部分のパッケージ外出しや抽象化はすでにしてあるし」という方も多いと思います。
-先に断っておくと、現時点のgo-cloudを利用するだけでバイナリからベンダー依存のコードを完全に削除できるわけではありません@<fn>{no_delete}。
+先に断っておくと、現時点のgo-cloudを利用するだけでバイナリからベンダー依存のコードを完全に削除できるわけではありません@<fn>{budougumi0617_no_delete}。
 まだ全てのAPI定義が揃っているわけでもありません。
-//footnote[no_delete][go-cloudパッケージが内部で参照している]
+//footnote[budougumi0617_no_delete][go-cloudパッケージが内部で参照している]
 では、今go-cloudを利用するメリットはなんでしょうか？
 デファクトになりえるgoogleによって定義されたクラウドサービスのAPIを使う、という意味以外にもgo-cloudを使う意味はあります。
 それはgo-cloudリポジトリにあるWireコマンドの存在と、Wireコマンドによって実現される依存関係の自動生成です。
@@ -168,9 +168,9 @@ Wireを使った実装を行うと、私たちは以下の恩恵を受けるこ�
 Wireは実行時の状態やリフレクションなしで動作するため、Wireで使用するように記述されたコードは手書きの初期化にも役立ちます。
 各クラウドプロパイダーはBLOBストレージやVMインスタンスという類似サービスを提供していますが、SDKでそれらを利用する際に必要になる情報は異なります。
 それとは別に初期化時にクラウドへの接続情報やロギング設定を引き回したいというニーズもあります。大抵は毎回初期化を行うか、グローバル変数に置くことが多いのではないでしょうか。
-これらの効率的に解決するために、go-cloudには独自のDIツールであるWireコマンド(パッケージ)@<fn>{wire}が同梱されています。
+これらの効率的に解決するために、go-cloudには独自のDIツールであるWireコマンド(パッケージ)@<fn>{budougumi0617_wire}が同梱されています。
 
-//footnote[wire][@<href>{https://github.com/google/go-cloud/blob/master/wire/README.md}]
+//footnote[budougumi0617_wire][@<href>{https://github.com/google/go-cloud/blob/master/wire/README.md}]
 
 https://github.com/google/go-cloud/tree/master/wire
 
@@ -205,9 +205,9 @@ Stack Driverに向けたLogger（@<code>{sdserver.Set}）の依存関係が定�
 InjectorはProviderを組み合わせて依存関係を注入するためのコードです。@<code>{wire.Build}関数を使って宣言します。
 @<list>{injector_gcp}はProviderで紹介した依存関係@<code>{GCP}などを組み合わせて依存関係を注入した@<code>{*application}オブジェクトを返すInjectorの宣言です。
 WireコマンドはこのInjectorｍの宣言からDIを行うコードを自動生成します。Injectorの宣言自体は自動生成を行うためだけのものなので、
-ビルドタグ@<fn>{build_tag}をつけてビルドには含めないようにします。
+ビルドタグ@<fn>{budougumi0617_build_tag}をつけてビルドには含めないようにします。
 
-//footnote[build_tag][@<href>{https://golang.org/pkg/go/build/#hdr-Build_Constraints}]
+//footnote[budougumi0617_build_tag][@<href>{https://golang.org/pkg/go/build/#hdr-Build_Constraints}]
 
 //list[injector_gcp][go-cloud/samples/guestbook/inject_gcp.goにあるInjector]{
 //+build wireinject
@@ -229,8 +229,8 @@ func setupGCP(ctx context.Context,
 //}
 
 上記の例だと自動生成後のコードが膨大になるので、簡単なInejctorを見ます。
-@<list>{injector}は３つのビルド関数と外部から与えられる文字列（@<code>{phrase}）を使って依存関係を解決した@<code>{Event}オブジェクトを返すInjector@<fn>{new_events}です。
-//footnote[new_events][@<code>{NewEvent}などの宣言はgo-cloud/samples/wire/main.goにあります。]
+@<list>{injector}は３つのビルド関数と外部から与えられる文字列（@<code>{phrase}）を使って依存関係を解決した@<code>{Event}オブジェクトを返すInjector@<fn>{budougumi0617_new_events}です。
+//footnote[budougumi0617_new_events][@<code>{NewEvent}などの宣言はgo-cloud/samples/wire/main.goにあります。]
 
 //list[injector][go-cloud/samples/wire/wire.goにあるInjector]{
 //+build wireinject
@@ -421,11 +421,11 @@ func Open(ctx context.Context,
 }
 //}
 
-第1引数の@<code>{context.Context}は@<code>{Services}内では生成されないオブジェクトなので、Injector作成時か@<code>{Services}を含んだ別の新しい@<code>{Provider}を定義するときに含めます@<fn>{context}。
+第1引数の@<code>{context.Context}は@<code>{Services}内では生成されないオブジェクトなので、Injector作成時か@<code>{Services}を含んだ別の新しい@<code>{Provider}を定義するときに含めます@<fn>{budougumi0617_context}。
 第2引数の@<code>{proxy.CertSource}インターフェースは@<list>{gcpcloud_services}の@<code>{wire.Set}の第1引数となっている@<code>{cloudmysql.CertSourceSet}が提供しているので、
 @<list>{gcpcloud_services}のProvider内で完結しています。
 
-//footnote[context][実際に@<code>{context.Context}をProviderで用意することはないでしょう]
+//footnote[budougumi0617_context][実際に@<code>{context.Context}をProviderで用意することはないでしょう]
 
 @<code>{cloudmysql.CertSourceSet}の宣言を見ると@<code>{cloudmysql_certsource}のようになっています。
 
@@ -525,7 +525,7 @@ func setupChecker(db *sql.DB) ([]health.Checker, func()) {
 が、@<hd>{pro_and_inj}でも引用した@<code>{*application}オブジェクトを取得するための@<code>{setupGCP}関数の定義から
 自動生成される@<code>{*application}の初期化コードが@<list>{setup_gcp_gen}です。省略していますが、50行強のコードになります。
 注入するオブジェクトがBLOBクライアント、 SQLクライアント(と、ロガーなどの設定)のみでもかなりのコード量が自動生成されることを考えると
-必要なコンポーネントさえInjectorに並べる@<fn>{fn_last}だけでコーディングが済むのはかなり魅力的です。
+必要なコンポーネントさえInjectorに並べる@<fn>{budougumi0617_last}だけでコーディングが済むのはかなり魅力的です。
 
 //list[setup_gcp_gen][GCPに依存した*applicationオブジェクトを取得するInjector]{
 func setupGCP(ctx context.Context,
@@ -549,7 +549,7 @@ func setupGCP(ctx context.Context,
 //}
 
 
-//footnote[fn_last][@<code>{wire.Build}関数にProviderを並べるときもとくに依存関係順にしなくてはいけないなどの条件はありません。]
+//footnote[budougumi0617_last][@<code>{wire.Build}関数にProviderを並べるときもとくに依存関係順にしなくてはいけないなどの条件はありません。]
 
 == おわりに
 今回はgo-cloudリポジトリと付属するWireコマンドの概要を確認しました。
