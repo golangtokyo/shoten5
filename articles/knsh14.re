@@ -1,4 +1,7 @@
 = go testのマニアックなオプション大全
+メルペイのバックエンドエンジニアの@knsh14@<fn>{knsh14_link_twitter}です。
+//footnote[knsh14_link_twitter][@<href>{https://twitter.com/knsh14}]
+
 Goではテストツールとして@<code>{go test}というコマンドが標準ツールとして提供されています。
 @<tt>{go test}はテストを実行して動作を検証するだけでなく、ベンチマークを計測したり、ドキュメント用にExampleを作成したりすることができます。
 
