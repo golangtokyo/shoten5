@@ -109,7 +109,8 @@ func (c *Client) Do(req *Request) (*Response, error) {
         reqs = append(reqs, req)
         resp, didTimeout, err = c.send(req, deadline);
         // 省略
-        redirectMethod, shouldRedirect, includeBody = redirectBehavior(req.Method, resp, reqs[0])
+        redirectMethod, shouldRedirect, includeBody 
+                    = redirectBehavior(req.Method, resp, reqs[0])
         if !shouldRedirect {
             return resp, nil
         }
@@ -125,7 +126,8 @@ Cookieの処理をして @<tt>{http.sned} を実行します。
 
 //emlist{
 // didTimeout is non-nil only if err != nil.
-func (c *Client) send(req *Request, deadline time.Time) (resp *Response, didTimeout func() bool, err error) {
+func (c *Client) send(req *Request, deadline time.Time) 
+                (resp *Response, didTimeout func() bool, err error) {
     if c.Jar != nil {
         for _, cookie := range c.Jar.Cookies(req.URL) {
             req.AddCookie(cookie)
@@ -154,7 +156,8 @@ http.Requestの準備ができたら送信処理の @<tt>{RoundTrip(req *Request
 
 
 //emlist{
-func send(ireq *Request, rt RoundTripper, deadline time.Time) (resp *Response, didTimeout func() bool, err error)
+func send(ireq *Request, rt RoundTripper, deadline time.Time)
+            (resp *Response, didTimeout func() bool, err error)
     req := ireq // req is either the original request, or a modified fork
     //省略
 
@@ -215,7 +218,8 @@ func (t *Transport) RoundTrip(req *Request) (*Response, error) {
             }
             for _, v := range vv {
                 if !httpguts.ValidHeaderFieldValue(v) {
-                    return nil, fmt.Errorf("net/http: invalid header field value %q for key %v", v, k)
+                    return nil, fmt.Errorf("net/http: invalid header 
+                                        field value %q for key %v", v, k)
                 }
             }
         }
@@ -263,7 +267,8 @@ getConnではキャッシュされたTCPコネクションを取得するか、�
 
 
 //emlist{
-func (t *Transport) getConn(treq *transportRequest, cm connectMethod) (*persistConn, error) {
+func (t *Transport) getConn(treq *transportRequest, 
+                cm connectMethod) (*persistConn, error) {
     // 省略
     case pc := <-idleConnCh:
         // 省略
@@ -285,7 +290,8 @@ persistConnでは、gzip圧縮の処理、送信、結果の待ち受けを行�
 
 
 //emlist{
-func (pc *persistConn) roundTrip(req *transportRequest) (resp *Response, err error) {
+func (pc *persistConn) roundTrip(req *transportRequest)
+                                    (resp *Response, err error) {
     if !pc.t.replaceReqCanceler(req.Request, pc.cancelRequest) {
         pc.t.putOrCloseIdleConn(pc)
         return nil, errRequestCanceled
@@ -353,7 +359,8 @@ func (pc *persistConn) writeLoop() {
         select {
         case wr := <-pc.writech:
             startBytesWritten := pc.nwrite
-            err := wr.req.Request.write(pc.bw, pc.isProxy, wr.req.extra, pc.waitForContinue(wr.continueCh))
+            err := wr.req.Request.write(pc.bw, pc.isProxy, 
+                        wr.req.extra, pc.waitForContinue(wr.continueCh))
     // 省略
 }
 //}
@@ -375,7 +382,8 @@ type persistConn struct {
 
 
 //emlist{
-func (t *Transport) dialConn(ctx context.Context, cm connectMethod) (*persistConn, error) {
+func (t *Transport) dialConn(ctx context.Context, cm connectMethod) 
+                                                (*persistConn, error) {
     // 省略
     pconn.bw = bufio.NewWriter(persistConnWriter{pconn})
     go pconn.writeLoop()
@@ -430,11 +438,13 @@ net.ConnのWriteへの書き込みは @<tt>{*bufio.Writer} 型なので、バッ
 
 
 //emlist{
-func (req *Request) write(w io.Writer, usingProxy bool, extraHeaders Header, waitForContinue func() bool) (err error) {
+func (req *Request) write(w io.Writer, usingProxy bool, extraHeaders Header, 
+                                        waitForContinue func() bool) (err error) {
     // 省略
 
     // メソッドを送信
-    _, err = fmt.Fprintf(w, "%s %s HTTP/1.1\r\n", valueOrDefault(r.Method, "GET"), ruri)
+    _, err = fmt.Fprintf(w, "%s %s HTTP/1.1\r\n",
+                        valueOrDefault(r.Method, "GET"), ruri)
     if err != nil {
         return err
     }
@@ -506,7 +516,8 @@ Channelのサンプルでよく登場するタイマーによるリクエスト�
 
 
 //emlist{
-func setRequestCancel(req *Request, rt RoundTripper, deadline time.Time) (stopTimer func(), didTimeout func() bool) {
+func setRequestCancel(req *Request, rt RoundTripper, deadline time.Time) 
+                                (stopTimer func(), didTimeout func() bool) {
     // 省略
 
     stopTimerCh := make(chan struct{})
@@ -554,7 +565,8 @@ func (t *Transport) RoundTrip(req *Request) (*Response, error) {
             }
             for _, v := range vv {
                 if !httpguts.ValidHeaderFieldValue(v) {
-                    return nil, fmt.Errorf("net/http: invalid header field value %q for key %v", v, k)
+                    return nil, fmt.Errorf("net/http: invalid header
+                                        field value %q for key %v", v, k)
                 }
             }
         }
@@ -586,7 +598,8 @@ handlePendingDialなどその関数でしか使わない共通処理は、関数
 
 
 //emlist{
-func (t *Transport) getConn(treq *transportRequest, cm connectMethod) (*persistConn, error) {
+func (t *Transport) getConn(treq *transportRequest, cm connectMethod)
+                                                (*persistConn, error) {
         handlePendingDial := func() {
         testHookPrePendingDial()
         go func() {
@@ -602,9 +615,6 @@ func (t *Transport) getConn(treq *transportRequest, cm connectMethod) (*persistC
     // 省略
         case pc := <-idleConnCh:
         handlePendingDial()
-        if trace != nil && trace.GotConn != nil {
-            trace.GotConn(httptrace.GotConnInfo{Conn: pc.conn, Reused: pc.isReused()})
-        }
         return pc, nil
     case <-req.Cancel:
         handlePendingDial()
@@ -627,7 +637,8 @@ func (t *Transport) getConn(treq *transportRequest, cm connectMethod) (*persistC
 
 
 //emlist{
-func send(ireq *Request, rt RoundTripper, deadline time.Time) (resp *Response, didTimeout func() bool, err error)
+func send(ireq *Request, rt RoundTripper, deadline time.Time)
+                (resp *Response, didTimeout func() bool, err error)
     // 初期状態のireqを保存
     req := ireq // req is either the original request, or a modified fork
     //省略
@@ -664,7 +675,8 @@ var (
     testHookEnterRoundTrip   = nop
 )
 
-func (pc *persistConn) roundTrip(req *transportRequest) (resp *Response, err error) {
+func (pc *persistConn) roundTrip(req *transportRequest)
+                                (resp *Response, err error) {
     testHookEnterRoundTrip()
     if !pc.t.replaceReqCanceler(req.Request, pc.cancelRequest) {
         pc.t.putOrCloseIdleConn(pc)
@@ -710,7 +722,8 @@ func (pc *persistConn) roundTrip(req *transportRequest) (resp *Response, err err
 
 
 //emlist{
-func (pc *persistConn) roundTrip(req *transportRequest) (resp *Response, err error) {
+func (pc *persistConn) roundTrip(req *transportRequest)
+                            (resp *Response, err error) {
 
     // 省略
     const debugRoundTrip = false
