@@ -201,7 +201,7 @@ var Services = wire.NewSet(
 //}
 
 @<tt>{Services}はCloud SQL用の認証情報（@<tt>{CertSourceSet}）、Cloud SQLへの接続（@<tt>{Open}）、
-Stack Driverに向けたLogger（@<tt>{sdserver.Set}）の依存関係が定義されてるProviderです。
+Stackdriverに向けたLogger（@<tt>{sdserver.Set}）の依存関係が定義されてるProviderです。
 @<tt>{GCP}は@<tt>{Services}の依存関係に加え、デフォルトのProject IDなどを取得する@<tt>{gcp.DefaultIdentity}も含めた依存関係のProviderです。
 
 
